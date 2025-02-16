@@ -1,43 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { MessageCircle, Link as LinkIcon } from 'lucide-react';
 import type { Conversation, Selection, Rule } from '../types';
 import { MessageBubble } from './MessageBubble';
 import { AnnotationSidebar } from './AnnotationSidebar';
+import { rulesApi, annotationsApi } from '../services/api';
 
 interface Props {
   conversation: Conversation;
   onAnnotationCreate: (annotation: Selection) => void;
 }
 
-// Example rules - in real app, these would come from props or API
-const exampleRules: Rule[] = [
-  {
-    id: '1',
-    domainId: 'ethics',
-    name: 'Respectful Communication',
-    description: 'Communication should be respectful and avoid harmful language.',
-    category: 'Communication',
-  },
-  {
-    id: '2',
-    domainId: 'ethics',
-    name: 'Cultural Sensitivity',
-    description: 'Content should be culturally sensitive and avoid stereotypes.',
-    category: 'Culture',
-  },
-  {
-    id: '3',
-    domainId: 'ethics',
-    name: 'Personal Privacy',
-    description: 'Respect personal privacy and avoid sharing sensitive information.',
-    category: 'Privacy',
-  },
-];
-
 export function ConversationView({ conversation, onAnnotationCreate }: Props) {
   const [selectedText, setSelectedText] = useState('');
   const [selection, setSelection] = useState<Omit<Selection, 'ruleId' | 'type' | 'comment'> | null>(null);
+  const [rules, setRules] = useState<Rule[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadRules();
+  }, []);
+
+  const loadRules = async () => {
+    try {
+      setIsLoading(true);
+      const fetchedRules = await rulesApi.getAll();
+      setRules(fetchedRules);
+      setError(null);
+    } catch (err) {
+      setError('Failed to load rules. Please try again later.');
+      console.error('Error loading rules:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleMouseUp = () => {
     const windowSelection = window.getSelection();
@@ -71,8 +68,22 @@ export function ConversationView({ conversation, onAnnotationCreate }: Props) {
     });
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md text-red-700">
+          {error}
+        </div>
+      )}
+
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{conversation.title}</h1>
@@ -119,7 +130,7 @@ export function ConversationView({ conversation, onAnnotationCreate }: Props) {
       {selectedText && (
         <AnnotationSidebar
           selectedText={selectedText}
-          rules={exampleRules}
+          rules={rules}
           onClose={() => {
             setSelectedText('');
             setSelection(null);

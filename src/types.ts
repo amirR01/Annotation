@@ -5,9 +5,7 @@ export interface Message {
 }
 
 export interface Conversation {
-  _id: {
-    $oid: string;
-  };
+  id: string;
   categories: string[];
   conversation: Message[];
   last_updated: string;
@@ -26,6 +24,7 @@ export interface Selection {
 }
 
 export interface Annotation {
+  id: string;
   conversationId: string;
   selections: Selection[];
   annotator: string;

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Rule, Selection, Annotation } from '../types';
+import type { Rule, Selection, Annotation, Conversation } from '../types';
 
 const api = axios.create({
   baseURL: 'http://localhost:8000/api',
@@ -13,7 +13,7 @@ export const rulesApi = {
     const response = await api.get('/rules');
     return response.data.map((rule: any) => ({
       ...rule,
-      id: rule._id, // Map MongoDB _id to id
+      id: rule._id,
     }));
   },
 
@@ -21,7 +21,7 @@ export const rulesApi = {
     const response = await api.post('/rules', rule);
     return {
       ...response.data,
-      id: response.data._id, // Map MongoDB _id to id
+      id: response.data._id,
     };
   },
 
@@ -29,7 +29,7 @@ export const rulesApi = {
     const response = await api.put(`/rules/${id}`, rule);
     return {
       ...response.data,
-      id: response.data._id, // Map MongoDB _id to id
+      id: response.data._id,
     };
   },
 
@@ -45,7 +45,7 @@ export const annotationsApi = {
     });
     return response.data.map((annotation: any) => ({
       ...annotation,
-      id: annotation._id, // Map MongoDB _id to id
+      id: annotation._id,
     }));
   },
 
@@ -57,7 +57,45 @@ export const annotationsApi = {
     const response = await api.post('/annotations', annotation);
     return {
       ...response.data,
-      id: response.data._id, // Map MongoDB _id to id
+      id: response.data._id,
     };
+  },
+};
+
+export const conversationsApi = {
+  getAll: async (): Promise<Conversation[]> => {
+    const response = await api.get('/conversations');
+    return response.data.map((conversation: any) => ({
+      ...conversation,
+      id: conversation._id,
+    }));
+  },
+
+  getById: async (id: string): Promise<Conversation> => {
+    const response = await api.get(`/conversations/${id}`);
+    return {
+      ...response.data,
+      id: response.data._id,
+    };
+  },
+
+  create: async (conversation: Omit<Conversation, 'id'>): Promise<Conversation> => {
+    const response = await api.post('/conversations', conversation);
+    return {
+      ...response.data,
+      id: response.data._id,
+    };
+  },
+
+  update: async (id: string, conversation: Partial<Conversation>): Promise<Conversation> => {
+    const response = await api.put(`/conversations/${id}`, conversation);
+    return {
+      ...response.data,
+      id: response.data._id,
+    };
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/conversations/${id}`);
   },
 };
