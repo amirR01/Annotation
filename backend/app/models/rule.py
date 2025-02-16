@@ -11,7 +11,7 @@ class RuleBase(BaseModel):
 class RuleCreate(RuleBase):
     pass
 
-class RuleUpdate(RuleBase):
+class RuleUpdate(BaseModel):
     domain_id: Optional[str] = None
     name: Optional[str] = None
     description: Optional[str] = None
@@ -21,5 +21,13 @@ class RuleInDB(RuleBase):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
 
     class Config:
-        json_encoders = {PyObjectId: str}
         populate_by_name = True
+        json_schema_extra = {
+            "example": {
+                "_id": "507f1f77bcf86cd799439011",
+                "domain_id": "ethics",
+                "name": "Respectful Communication",
+                "description": "Communication should be respectful and avoid harmful language.",
+                "category": "Communication"
+            }
+        }
