@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 from .base import PyObjectId
 
 class Selection(BaseModel):
-    text: str
+    message_index: int
     start_offset: int
     end_offset: int
     rule_id: str
@@ -30,7 +30,7 @@ class AnnotationInDB(AnnotationBase):
                 "_id": "507f1f77bcf86cd799439011",
                 "conversation_id": "123",
                 "selections": [{
-                    "text": "example text",
+                    "message_index": 0,
                     "start_offset": 0,
                     "end_offset": 12,
                     "rule_id": "456",
