@@ -11,17 +11,26 @@ const api = axios.create({
 export const rulesApi = {
   getAll: async (): Promise<Rule[]> => {
     const response = await api.get('/rules');
-    return response.data;
+    return response.data.map((rule: any) => ({
+      ...rule,
+      id: rule._id, // Map MongoDB _id to id
+    }));
   },
 
   create: async (rule: Omit<Rule, 'id'>): Promise<Rule> => {
     const response = await api.post('/rules', rule);
-    return response.data;
+    return {
+      ...response.data,
+      id: response.data._id, // Map MongoDB _id to id
+    };
   },
 
   update: async (id: string, rule: Partial<Rule>): Promise<Rule> => {
     const response = await api.put(`/rules/${id}`, rule);
-    return response.data;
+    return {
+      ...response.data,
+      id: response.data._id, // Map MongoDB _id to id
+    };
   },
 
   delete: async (id: string): Promise<void> => {
@@ -34,7 +43,10 @@ export const annotationsApi = {
     const response = await api.get('/annotations', {
       params: { conversation_id: conversationId },
     });
-    return response.data;
+    return response.data.map((annotation: any) => ({
+      ...annotation,
+      id: annotation._id, // Map MongoDB _id to id
+    }));
   },
 
   create: async (annotation: {
@@ -43,6 +55,9 @@ export const annotationsApi = {
     annotator: string;
   }): Promise<Annotation> => {
     const response = await api.post('/annotations', annotation);
-    return response.data;
+    return {
+      ...response.data,
+      id: response.data._id, // Map MongoDB _id to id
+    };
   },
 };

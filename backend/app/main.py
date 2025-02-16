@@ -14,7 +14,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(api_router, prefix="/api")
+# Include API router with the correct prefix
+app.include_router(api_router)  # Remove the prefix="/api" since it's already in the router
 
 @app.on_event("startup")
 async def startup_db_client():
