@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ConversationView } from './components/ConversationView';
 import { RulesManagement } from './components/RulesManagement';
 import type { Selection, Rule } from './types';
+import { rulesApi, annotationsApi } from './services/api';
 
 // Example conversation data
 const exampleConversation = {
@@ -35,57 +36,52 @@ const exampleConversation = {
   "title": "Anyone find their own culture triggering?"
 };
 
-// Example rules data
-const initialRules: Rule[] = [
-  {
-    id: '1',
-    domainId: 'ethics',
-    name: 'Respectful Communication',
-    description: 'Communication should be respectful and avoid harmful language.',
-    category: 'Communication',
-  },
-  {
-    id: '2',
-    domainId: 'ethics',
-    name: 'Cultural Sensitivity',
-    description: 'Content should be culturally sensitive and avoid stereotypes.',
-    category: 'Culture',
-  },
-  {
-    id: '3',
-    domainId: 'privacy',
-    name: 'Personal Privacy',
-    description: 'Respect personal privacy and avoid sharing sensitive information.',
-    category: 'Privacy',
-  },
-];
-
 function App() {
-  const [annotations, setAnnotations] = useState<Selection[]>([]);
-  const [rules, setRules] = useState<Rule[]>(initialRules);
   const [view, setView] = useState<'conversation' | 'rules'>('conversation');
+  const [error, setError] = useState<string | null>(null);
 
-  const handleAnnotationCreate = (annotation: Selection) => {
-    setAnnotations((prev) => [...prev, annotation]);
-    console.log('New annotation:', annotation);
+  const handleAnnotationCreate = async (annotation: Selection) => {
+    try {
+      await annotationsApi.create({
+        conversation_id: exampleConversation._id.$oid,
+        selections: [annotation],
+        annotator: 'current-user', // TODO: Replace with actual user ID when auth is implemented
+      });
+      setError(null);
+    } catch (err) {
+      setError('Failed to save annotation. Please try again.');
+      console.error('Error saving annotation:', err);
+    }
   };
 
-  const handleRuleCreate = (rule: Omit<Rule, 'id'>) => {
-    const newRule = {
-      ...rule,
-      id: crypto.randomUUID(),
-    };
-    setRules((prev) => [...prev, newRule]);
+  const handleRuleCreate = async (rule: Omit<Rule, 'id'>) => {
+    try {
+      await rulesApi.create(rule);
+      setError(null);
+    } catch (err) {
+      setError('Failed to create rule. Please try again.');
+      console.error('Error creating rule:', err);
+    }
   };
 
-  const handleRuleUpdate = (updatedRule: Rule) => {
-    setRules((prev) =>
-      prev.map((rule) => (rule.id === updatedRule.id ? updatedRule : rule))
-    );
+  const handleRuleUpdate = async (rule: Rule) => {
+    try {
+      await rulesApi.update(rule.id, rule);
+      setError(null);
+    } catch (err) {
+      setError('Failed to update rule. Please try again.');
+      console.error('Error updating rule:', err);
+    }
   };
 
-  const handleRuleDelete = (ruleId: string) => {
-    setRules((prev) => prev.filter((rule) => rule.id !== ruleId));
+  const handleRuleDelete = async (ruleId: string) => {
+    try {
+      await rulesApi.delete(ruleId);
+      setError(null);
+    } catch (err) {
+      setError('Failed to delete rule. Please try again.');
+      console.error('Error deleting rule:', err);
+    }
   };
 
   return (
@@ -120,6 +116,12 @@ function App() {
       </nav>
 
       <main className="py-8">
+        {error && (
+          <div className="max-w-4xl mx-auto mb-4 p-4 bg-red-50 border border-red-200 rounded-md text-red-700">
+            {error}
+          </div>
+        )}
+
         {view === 'conversation' ? (
           <ConversationView
             conversation={exampleConversation}
@@ -127,7 +129,6 @@ function App() {
           />
         ) : (
           <RulesManagement
-            rules={rules}
             onRuleCreate={handleRuleCreate}
             onRuleUpdate={handleRuleUpdate}
             onRuleDelete={handleRuleDelete}

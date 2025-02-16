@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Save, X } from 'lucide-react';
 import type { Rule } from '../types';
+import { rulesApi } from '../services/api';
 
 interface Props {
-  rules: Rule[];
   onRuleCreate: (rule: Omit<Rule, 'id'>) => void;
   onRuleUpdate: (rule: Rule) => void;
   onRuleDelete: (ruleId: string) => void;
@@ -13,24 +13,79 @@ interface EditingRule extends Omit<Rule, 'id'> {
   id?: string;
 }
 
-export function RulesManagement({ rules, onRuleCreate, onRuleUpdate, onRuleDelete }: Props) {
+export function RulesManagement({ onRuleCreate, onRuleUpdate, onRuleDelete }: Props) {
   const [isAdding, setIsAdding] = useState(false);
   const [editingRule, setEditingRule] = useState<EditingRule | null>(null);
-  const [domains] = useState(['ethics', 'privacy', 'security', 'content']); // In real app, this would come from API
+  const [rules, setRules] = useState<Rule[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [domains] = useState(['ethics', 'privacy', 'security', 'content']);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    loadRules();
+  }, []);
+
+  const loadRules = async () => {
+    try {
+      setIsLoading(true);
+      const fetchedRules = await rulesApi.getAll();
+      setRules(fetchedRules);
+      setError(null);
+    } catch (err) {
+      setError('Failed to load rules. Please try again later.');
+      console.error('Error loading rules:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingRule) return;
 
-    if (editingRule.id) {
-      onRuleUpdate(editingRule as Rule);
-    } else {
-      onRuleCreate(editingRule);
-    }
+    try {
+      if (editingRule.id) {
+        const updatedRule = await rulesApi.update(editingRule.id, editingRule);
+        setRules(prev => prev.map(rule => 
+          rule.id === updatedRule.id ? updatedRule : rule
+        ));
+        onRuleUpdate(updatedRule);
+      } else {
+        const newRule = await rulesApi.create(editingRule);
+        setRules(prev => [...prev, newRule]);
+        onRuleCreate(editingRule);
+      }
 
-    setEditingRule(null);
-    setIsAdding(false);
+      setEditingRule(null);
+      setIsAdding(false);
+      setError(null);
+    } catch (err) {
+      setError('Failed to save rule. Please try again.');
+      console.error('Error saving rule:', err);
+    }
   };
+
+  const handleDelete = async (ruleId: string) => {
+    if (!confirm('Are you sure you want to delete this rule?')) return;
+
+    try {
+      await rulesApi.delete(ruleId);
+      setRules(prev => prev.filter(rule => rule.id !== ruleId));
+      onRuleDelete(ruleId);
+      setError(null);
+    } catch (err) {
+      setError('Failed to delete rule. Please try again.');
+      console.error('Error deleting rule:', err);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
 
   const groupedRules = rules.reduce((acc, rule) => {
     if (!acc[rule.domainId]) {
@@ -42,6 +97,12 @@ export function RulesManagement({ rules, onRuleCreate, onRuleUpdate, onRuleDelet
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md text-red-700">
+          {error}
+        </div>
+      )}
+
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Rules Management</h1>
         <button
@@ -183,7 +244,7 @@ export function RulesManagement({ rules, onRuleCreate, onRuleUpdate, onRuleDelet
                           <Edit2 size={20} />
                         </button>
                         <button
-                          onClick={() => onRuleDelete(rule.id)}
+                          onClick={() => handleDelete(rule.id)}
                           className="p-1 text-gray-400 hover:text-red-500"
                         >
                           <Trash2 size={20} />
