@@ -10,7 +10,7 @@ const api = axios.create({
 
 export const rulesApi = {
   getAll: async (): Promise<Rule[]> => {
-    const response = await api.get('/rules');
+    const response = await api.get('/rules/');
     return response.data.map((rule: any) => ({
       ...rule,
       id: rule._id,
@@ -18,7 +18,7 @@ export const rulesApi = {
   },
 
   create: async (rule: Omit<Rule, 'id'>): Promise<Rule> => {
-    const response = await api.post('/rules', rule);
+    const response = await api.post('/rules/', rule);
     return {
       ...response.data,
       id: response.data._id,
@@ -40,7 +40,7 @@ export const rulesApi = {
 
 export const annotationsApi = {
   getByConversation: async (conversationId: string): Promise<Annotation[]> => {
-    const response = await api.get('/annotations', {
+    const response = await api.get('/annotations/', {
       params: { conversation_id: conversationId },
     });
     return response.data.map((annotation: any) => ({
@@ -58,7 +58,7 @@ export const annotationsApi = {
     selections: Selection[];
     annotator: string;
   }): Promise<Annotation> => {
-    const response = await api.post('/annotations', {
+    const response = await api.post('/annotations/', {
       ...annotation,
       selections: annotation.selections.map(selection => ({
         ...selection,
@@ -78,7 +78,7 @@ export const annotationsApi = {
 
 export const conversationsApi = {
   getAll: async (): Promise<Conversation[]> => {
-    const response = await api.get('/conversations');
+    const response = await api.get('/conversations/');
     return response.data.map((conversation: any) => ({
       ...conversation,
       id: conversation._id,
@@ -94,7 +94,7 @@ export const conversationsApi = {
   },
 
   create: async (conversation: Omit<Conversation, 'id'>): Promise<Conversation> => {
-    const response = await api.post('/conversations', conversation);
+    const response = await api.post('/conversations/', conversation);
     return {
       ...response.data,
       id: response.data._id,
