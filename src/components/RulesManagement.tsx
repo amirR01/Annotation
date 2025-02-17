@@ -19,7 +19,7 @@ export function RulesManagement({ onRuleCreate, onRuleUpdate, onRuleDelete }: Pr
   const [rules, setRules] = useState<Rule[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [domains] = useState(['ethics', 'privacy', 'security', 'content']);
+  const [domains] = useState(['Education', 'Ethics', 'Privacy', 'Security', 'Content']);
 
   useEffect(() => {
     loadRules();
@@ -87,11 +87,12 @@ export function RulesManagement({ onRuleCreate, onRuleUpdate, onRuleDelete }: Pr
     );
   }
 
+  // Group rules by domain
   const groupedRules = rules.reduce((acc, rule) => {
-    if (!acc[rule.domainId]) {
-      acc[rule.domainId] = [];
+    if (!acc[rule.domain]) {
+      acc[rule.domain] = [];
     }
-    acc[rule.domainId].push(rule);
+    acc[rule.domain].push(rule);
     return acc;
   }, {} as Record<string, Rule[]>);
 
@@ -109,7 +110,7 @@ export function RulesManagement({ onRuleCreate, onRuleUpdate, onRuleDelete }: Pr
           onClick={() => {
             setIsAdding(true);
             setEditingRule({
-              domainId: domains[0],
+              domain: domains[0],
               name: '',
               description: '',
               category: '',
@@ -134,14 +135,14 @@ export function RulesManagement({ onRuleCreate, onRuleUpdate, onRuleDelete }: Pr
                 Domain
               </label>
               <select
-                value={editingRule?.domainId}
-                onChange={(e) => setEditingRule(prev => prev ? { ...prev, domainId: e.target.value } : null)}
+                value={editingRule?.domain}
+                onChange={(e) => setEditingRule(prev => prev ? { ...prev, domain: e.target.value } : null)}
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 required
               >
                 {domains.map((domain) => (
                   <option key={domain} value={domain}>
-                    {domain.charAt(0).toUpperCase() + domain.slice(1)}
+                    {domain}
                   </option>
                 ))}
               </select>
@@ -218,7 +219,7 @@ export function RulesManagement({ onRuleCreate, onRuleUpdate, onRuleDelete }: Pr
             <div key={domain} className="border border-gray-200 rounded-lg overflow-hidden">
               <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
                 <h2 className="text-lg font-semibold text-gray-900">
-                  {domain.charAt(0).toUpperCase() + domain.slice(1)}
+                  {domain}
                 </h2>
               </div>
               <div className="divide-y divide-gray-200">
