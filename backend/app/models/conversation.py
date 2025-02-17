@@ -15,6 +15,7 @@ class ConversationBase(BaseModel):
     post_url: str
     length: int = Field(...)
     last_updated: datetime = Field(default_factory=datetime.utcnow)
+    domain: str = Field(...)
 
 class ConversationCreate(ConversationBase):
     pass
@@ -25,6 +26,7 @@ class ConversationUpdate(BaseModel):
     conversation: Optional[List[Message]] = None
     post_url: Optional[str] = None
     last_updated: Optional[datetime] = None
+    domain: Optional[str] = None
 
 class ConversationInDB(ConversationBase):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
@@ -45,6 +47,7 @@ class ConversationInDB(ConversationBase):
                 ],
                 "post_url": "https://example.com/post",
                 "length": 1,
-                "last_updated": "2024-02-20T12:00:00Z"
+                "last_updated": "2024-02-20T12:00:00Z",
+                "domain": "Education"
             }
         }
