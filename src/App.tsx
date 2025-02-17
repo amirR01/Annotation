@@ -33,7 +33,8 @@ const exampleConversation = {
   "last_updated": "2025-02-11T14:20:47.330699+00:00",
   "length": 4,
   "post_url": "https://www.reddit.com/r/CPTSD/comments/1id29po/anyone_find_their_own_culture_triggering/",
-  "title": "Anyone find their own culture triggering?"
+  "title": "Anyone find their own culture triggering?",
+  "domain": "Ethics"
 };
 
 function App() {
@@ -124,7 +125,10 @@ function App() {
 
         {view === 'conversation' ? (
           <ConversationView
-            conversation={exampleConversation}
+            conversation={{
+              ...exampleConversation,
+              id: exampleConversation._id.$oid,
+            }}
             onAnnotationCreate={handleAnnotationCreate}
           />
         ) : (
