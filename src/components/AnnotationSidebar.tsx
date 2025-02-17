@@ -27,7 +27,11 @@ export function AnnotationSidebar({ selectedText, rules, onClose, onAnnotate }: 
       type,
       comment
     });
-    onClose();
+
+    // Reset form
+    setSelectedRule('');
+    setType('violation');
+    setComment('');
   };
 
   return (
@@ -58,18 +62,25 @@ export function AnnotationSidebar({ selectedText, rules, onClose, onAnnotate }: 
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Rule
           </label>
-          <select
-            value={selectedRule}
-            onChange={(e) => setSelectedRule(e.target.value)}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          >
-            <option value="">Select a rule...</option>
-            {rules.map((rule) => (
-              <option key={rule.id} value={rule.id}>
-                {rule.name}
-              </option>
-            ))}
-          </select>
+          {rules.length === 0 ? (
+            <div className="p-3 bg-yellow-50 text-yellow-700 rounded-md text-sm">
+              No rules available for this domain. Please add rules first.
+            </div>
+          ) : (
+            <select
+              value={selectedRule}
+              onChange={(e) => setSelectedRule(e.target.value)}
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              required
+            >
+              <option value="">Select a rule...</option>
+              {rules.map((rule) => (
+                <option key={rule.id} value={rule.id}>
+                  {rule.name} ({rule.category})
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
         <div>
@@ -118,13 +129,14 @@ export function AnnotationSidebar({ selectedText, rules, onClose, onAnnotate }: 
             className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             rows={3}
             placeholder="Add your comment here..."
+            required
           />
         </div>
 
         <div className="pt-2">
           <button
             type="submit"
-            disabled={!selectedRule}
+            disabled={!selectedRule || rules.length === 0}
             className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Save Annotation
