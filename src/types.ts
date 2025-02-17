@@ -6,16 +6,17 @@ export interface Message {
 
 export interface Conversation {
   id: string;
+  title: string;
   categories: string[];
   conversation: Message[];
-  last_updated: string;
-  length: number;
   post_url: string;
-  title: string;
+  length: number;
+  last_updated: string;
+  domain: string;
 }
 
 export interface Selection {
-  text: string;
+  messageIndex: number;
   startOffset: number;
   endOffset: number;
   ruleId: string;
@@ -33,7 +34,7 @@ export interface Annotation {
 
 export interface Rule {
   id: string;
-  domainId: string;
+  domain: string;
   name: string;
   description: string;
   category: string;

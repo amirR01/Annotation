@@ -46,6 +46,10 @@ export const annotationsApi = {
     return response.data.map((annotation: any) => ({
       ...annotation,
       id: annotation._id,
+      selections: annotation.selections.map((selection: any) => ({
+        ...selection,
+        messageIndex: selection.message_index,
+      })),
     }));
   },
 
@@ -54,10 +58,20 @@ export const annotationsApi = {
     selections: Selection[];
     annotator: string;
   }): Promise<Annotation> => {
-    const response = await api.post('/annotations', annotation);
+    const response = await api.post('/annotations', {
+      ...annotation,
+      selections: annotation.selections.map(selection => ({
+        ...selection,
+        message_index: selection.messageIndex,
+      })),
+    });
     return {
       ...response.data,
       id: response.data._id,
+      selections: response.data.selections.map((selection: any) => ({
+        ...selection,
+        messageIndex: selection.message_index,
+      })),
     };
   },
 };
