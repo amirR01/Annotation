@@ -55,34 +55,16 @@ function App() {
     }
   };
 
-  const handleRuleCreate = async (rule: Omit<Rule, 'id'>) => {
-    try {
-      await rulesApi.create(rule);
-      setError(null);
-    } catch (err) {
-      setError('Failed to create rule. Please try again.');
-      console.error('Error creating rule:', err);
-    }
+  const handleRuleCreate = (rule: Rule) => {
+    setError(null);
   };
 
-  const handleRuleUpdate = async (rule: Rule) => {
-    try {
-      await rulesApi.update(rule.id, rule);
-      setError(null);
-    } catch (err) {
-      setError('Failed to update rule. Please try again.');
-      console.error('Error updating rule:', err);
-    }
+  const handleRuleUpdate = (rule: Rule) => {
+    setError(null);
   };
 
-  const handleRuleDelete = async (ruleId: string) => {
-    try {
-      await rulesApi.delete(ruleId);
-      setError(null);
-    } catch (err) {
-      setError('Failed to delete rule. Please try again.');
-      console.error('Error deleting rule:', err);
-    }
+  const handleRuleDelete = (ruleId: string) => {
+    setError(null);
   };
 
   return (
@@ -143,4 +125,4 @@ function App() {
   );
 }
 
-export default App;
+export default App

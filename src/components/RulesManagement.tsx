@@ -4,7 +4,7 @@ import type { Rule } from '../types';
 import { rulesApi } from '../services/api';
 
 interface Props {
-  onRuleCreate: (rule: Omit<Rule, 'id'>) => void;
+  onRuleCreate: (rule: Rule) => void;
   onRuleUpdate: (rule: Rule) => void;
   onRuleDelete: (ruleId: string) => void;
 }
@@ -53,7 +53,7 @@ export function RulesManagement({ onRuleCreate, onRuleUpdate, onRuleDelete }: Pr
       } else {
         const newRule = await rulesApi.create(editingRule);
         setRules(prev => [...prev, newRule]);
-        onRuleCreate(editingRule);
+        onRuleCreate(newRule); // Pass the created rule with ID
       }
 
       setEditingRule(null);
