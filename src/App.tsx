@@ -110,6 +110,8 @@ function App() {
             conversation={{
               ...exampleConversation,
               id: exampleConversation._id.$oid,
+              postUrl: exampleConversation.post_url,
+              lastUpdated: exampleConversation.last_updated,
             }}
             onAnnotationCreate={handleAnnotationCreate}
           />
@@ -125,4 +127,4 @@ function App() {
   );
 }
 
-export default App
+export default App;

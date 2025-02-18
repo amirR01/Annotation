@@ -9,9 +9,9 @@ export interface Conversation {
   title: string;
   categories: string[];
   conversation: Message[];
-  post_url: string;
+  postUrl: string;
   length: number;
-  last_updated: string;
+  lastUpdated: string;
   domain: string;
 }
 

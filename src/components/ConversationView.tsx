@@ -81,6 +81,8 @@ export function ConversationView({ conversation, onAnnotationCreate }: Props) {
 
     await onAnnotationCreate(newAnnotation);
     await loadAnnotations(); // Reload annotations to show the new one
+    setSelectedText('');
+    setSelection(null);
   };
 
   if (isLoading) {
@@ -110,7 +112,7 @@ export function ConversationView({ conversation, onAnnotationCreate }: Props) {
             <span>{conversation.length} messages</span>
             <span>•</span>
             <span>
-              {format(new Date(conversation.last_updated), 'MMM d, yyyy')}
+              {format(new Date(conversation.lastUpdated), 'MMM d, yyyy')}
             </span>
           </div>
           <div className="flex gap-2 mt-2">
@@ -130,7 +132,7 @@ export function ConversationView({ conversation, onAnnotationCreate }: Props) {
           </div>
         </div>
         <a
-          href={conversation.post_url}
+          href={conversation.postUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-800"
