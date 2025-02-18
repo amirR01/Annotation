@@ -1,9 +1,16 @@
 import React from 'react';
-import { X, Check, AlertTriangle } from 'lucide-react';
+import { X, Check, AlertTriangle, Trash2 } from 'lucide-react';
 import type { Rule } from '../types';
 
+interface PendingSelection {
+  messageIndex: number;
+  startOffset: number;
+  endOffset: number;
+  text: string;
+}
+
 interface Props {
-  selectedText: string;
+  selections: PendingSelection[];
   rules: Rule[];
   onClose: () => void;
   onAnnotate: (annotation: {
@@ -11,9 +18,10 @@ interface Props {
     type: 'violation' | 'compliance';
     comment: string;
   }) => void;
+  onRemoveSelection: (index: number) => void;
 }
 
-export function AnnotationSidebar({ selectedText, rules, onClose, onAnnotate }: Props) {
+export function AnnotationSidebar({ selections, rules, onClose, onAnnotate, onRemoveSelection }: Props) {
   const [selectedRule, setSelectedRule] = React.useState<string>('');
   const [type, setType] = React.useState<'violation' | 'compliance'>('violation');
   const [comment, setComment] = React.useState('');
@@ -51,10 +59,24 @@ export function AnnotationSidebar({ selectedText, rules, onClose, onAnnotate }: 
       <form onSubmit={handleSubmit} className="p-4 space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Selected Text
+            Selected Text ({selections.length})
           </label>
-          <div className="p-3 bg-gray-50 rounded-md text-sm text-gray-600">
-            {selectedText}
+          <div className="space-y-2">
+            {selections.map((selection, index) => (
+              <div key={index} className="flex items-start gap-2 p-3 bg-gray-50 rounded-md">
+                <div className="flex-grow">
+                  <p className="text-sm text-gray-600">{selection.text}</p>
+                  <span className="text-xs text-gray-500">Message {selection.messageIndex + 1}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onRemoveSelection(index)}
+                  className="text-gray-400 hover:text-red-500"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -136,10 +158,10 @@ export function AnnotationSidebar({ selectedText, rules, onClose, onAnnotate }: 
         <div className="pt-2">
           <button
             type="submit"
-            disabled={!selectedRule || rules.length === 0}
+            disabled={!selectedRule || rules.length === 0 || selections.length === 0}
             className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Save Annotation
+            Save Annotations ({selections.length})
           </button>
         </div>
       </form>
