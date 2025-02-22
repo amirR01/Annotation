@@ -1,30 +1,27 @@
 import React from 'react';
-import { X, Check, AlertTriangle, Trash2 } from 'lucide-react';
-import type { Rule } from '../types';
-
-interface PendingSelection {
-  messageIndex: number;
-  startOffset: number;
-  endOffset: number;
-  text: string;
-}
+import { X, Check, AlertTriangle, Plus } from 'lucide-react';
+import type { Rule, ViolationType } from '../types';
 
 interface Props {
-  selections: PendingSelection[];
+  selectedText: string;
+  messageIndex: number;
   rules: Rule[];
   onClose: () => void;
   onAnnotate: (annotation: {
     ruleId: string;
     type: 'violation' | 'compliance';
+    violationType?: ViolationType;
     comment: string;
+    replacementSuggestion?: string;
   }) => void;
-  onRemoveSelection: (index: number) => void;
 }
 
-export function AnnotationSidebar({ selections, rules, onClose, onAnnotate, onRemoveSelection }: Props) {
+export function AnnotationSidebar({ selectedText, messageIndex, rules, onClose, onAnnotate }: Props) {
   const [selectedRule, setSelectedRule] = React.useState<string>('');
   const [type, setType] = React.useState<'violation' | 'compliance'>('violation');
+  const [violationType, setViolationType] = React.useState<ViolationType>('text');
   const [comment, setComment] = React.useState('');
+  const [replacementSuggestion, setReplacementSuggestion] = React.useState(selectedText);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,13 +30,17 @@ export function AnnotationSidebar({ selections, rules, onClose, onAnnotate, onRe
     onAnnotate({
       ruleId: selectedRule,
       type,
-      comment
+      ...(type === 'violation' && { violationType }),
+      comment,
+      ...(type === 'violation' && violationType === 'text' && { replacementSuggestion })
     });
 
     // Reset form
     setSelectedRule('');
     setType('violation');
+    setViolationType('text');
     setComment('');
+    setReplacementSuggestion('');
   };
 
   return (
@@ -59,24 +60,10 @@ export function AnnotationSidebar({ selections, rules, onClose, onAnnotate, onRe
       <form onSubmit={handleSubmit} className="p-4 space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Selected Text ({selections.length})
+            Selected Text (Message {messageIndex + 1})
           </label>
-          <div className="space-y-2">
-            {selections.map((selection, index) => (
-              <div key={index} className="flex items-start gap-2 p-3 bg-gray-50 rounded-md">
-                <div className="flex-grow">
-                  <p className="text-sm text-gray-600">{selection.text}</p>
-                  <span className="text-xs text-gray-500">Message {selection.messageIndex + 1}</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => onRemoveSelection(index)}
-                  className="text-gray-400 hover:text-red-500"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            ))}
+          <div className="p-3 bg-gray-50 rounded-md text-sm text-gray-600">
+            {selectedText || 'No text selected (Missing text annotation)'}
           </div>
         </div>
 
@@ -141,6 +128,44 @@ export function AnnotationSidebar({ selections, rules, onClose, onAnnotate, onRe
           </div>
         </div>
 
+        {type === 'violation' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Violation Type
+            </label>
+            <div className="flex gap-4">
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="violationType"
+                  value="text"
+                  checked={violationType === 'text'}
+                  onChange={(e) => setViolationType(e.target.value as ViolationType)}
+                  className="text-red-500 focus:ring-red-500"
+                />
+                <span className="ml-2 flex items-center text-sm text-gray-700">
+                  <AlertTriangle size={16} className="text-red-500 mr-1" />
+                  Text Violation
+                </span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="violationType"
+                  value="missing"
+                  checked={violationType === 'missing'}
+                  onChange={(e) => setViolationType(e.target.value as ViolationType)}
+                  className="text-orange-500 focus:ring-orange-500"
+                />
+                <span className="ml-2 flex items-center text-sm text-gray-700">
+                  <Plus size={16} className="text-orange-500 mr-1" />
+                  Missing Text
+                </span>
+              </label>
+            </div>
+          </div>
+        )}
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Comment
@@ -155,13 +180,29 @@ export function AnnotationSidebar({ selections, rules, onClose, onAnnotate, onRe
           />
         </div>
 
+        {type === 'violation' && violationType === 'text' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Replacement Suggestion
+            </label>
+            <textarea
+              value={replacementSuggestion}
+              onChange={(e) => setReplacementSuggestion(e.target.value)}
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              rows={3}
+              placeholder="Suggest a replacement text..."
+              required
+            />
+          </div>
+        )}
+
         <div className="pt-2">
           <button
             type="submit"
-            disabled={!selectedRule || rules.length === 0 || selections.length === 0}
+            disabled={!selectedRule || rules.length === 0}
             className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Save Annotations ({selections.length})
+            Save Annotation
           </button>
         </div>
       </form>

@@ -55,14 +55,16 @@ export const annotationsApi = {
     return response.data.map((annotation: any) => ({
       id: annotation._id,
       conversationId: annotation.conversation_id,
-      selections: annotation.selections.map((selection: any) => ({
-        messageIndex: selection.message_index,
-        startOffset: selection.start_offset,
-        endOffset: selection.end_offset,
-        ruleId: selection.rule_id,
-        type: selection.type,
-        comment: selection.comment,
-      })),
+      selection: {
+        messageIndex: annotation.selection.message_index,
+        startOffset: annotation.selection.start_offset,
+        endOffset: annotation.selection.end_offset,
+        ruleId: annotation.selection.rule_id,
+        type: annotation.selection.type,
+        violationType: annotation.selection.violation_type,
+        comment: annotation.selection.comment,
+        replacementSuggestion: annotation.selection.replacement_suggestion,
+      },
       annotator: annotation.annotator,
       timestamp: annotation.timestamp,
     }));
@@ -70,19 +72,21 @@ export const annotationsApi = {
 
   create: async (annotation: {
     conversation_id: string;
-    selections: Selection[];
+    selection: Selection;
     annotator: string;
   }): Promise<Annotation> => {
     const payload = {
       conversation_id: annotation.conversation_id,
-      selections: annotation.selections.map(selection => ({
-        message_index: selection.messageIndex,
-        start_offset: selection.startOffset,
-        end_offset: selection.endOffset,
-        rule_id: selection.ruleId,
-        type: selection.type,
-        comment: selection.comment,
-      })),
+      selection: {
+        message_index: annotation.selection.messageIndex,
+        start_offset: annotation.selection.startOffset,
+        end_offset: annotation.selection.endOffset,
+        rule_id: annotation.selection.ruleId,
+        type: annotation.selection.type,
+        violation_type: annotation.selection.violationType,
+        comment: annotation.selection.comment,
+        replacement_suggestion: annotation.selection.replacementSuggestion,
+      },
       annotator: annotation.annotator,
     };
 
@@ -90,14 +94,16 @@ export const annotationsApi = {
     return {
       id: response.data._id,
       conversationId: response.data.conversation_id,
-      selections: response.data.selections.map((selection: any) => ({
-        messageIndex: selection.message_index,
-        startOffset: selection.start_offset,
-        endOffset: selection.end_offset,
-        ruleId: selection.rule_id,
-        type: selection.type,
-        comment: selection.comment,
-      })),
+      selection: {
+        messageIndex: response.data.selection.message_index,
+        startOffset: response.data.selection.start_offset,
+        endOffset: response.data.selection.end_offset,
+        ruleId: response.data.selection.rule_id,
+        type: response.data.selection.type,
+        violationType: response.data.selection.violation_type,
+        comment: response.data.selection.comment,
+        replacementSuggestion: response.data.selection.replacement_suggestion,
+      },
       annotator: response.data.annotator,
       timestamp: response.data.timestamp,
     };

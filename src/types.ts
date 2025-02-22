@@ -15,19 +15,23 @@ export interface Conversation {
   domain: string;
 }
 
+export type ViolationType = 'text' | 'missing';
+
 export interface Selection {
   messageIndex: number;
   startOffset: number;
   endOffset: number;
   ruleId: string;
   type: 'violation' | 'compliance';
+  violationType?: ViolationType;
   comment: string;
+  replacementSuggestion?: string;
 }
 
 export interface Annotation {
   id: string;
   conversationId: string;
-  selections: Selection[];
+  selection: Selection;
   annotator: string;
   timestamp: string;
 }

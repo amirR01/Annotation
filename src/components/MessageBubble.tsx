@@ -3,22 +3,14 @@ import { format } from 'date-fns';
 import type { Message, Selection } from '../types';
 import clsx from 'clsx';
 
-interface PendingSelection {
-  messageIndex: number;
-  startOffset: number;
-  endOffset: number;
-  text: string;
-}
-
 interface Props {
   message: Message;
   isFirst: boolean;
   messageIndex: number;
   annotations: Selection[];
-  pendingSelections: PendingSelection[];
 }
 
-export function MessageBubble({ message, isFirst, messageIndex, annotations, pendingSelections }: Props) {
+export function MessageBubble({ message, isFirst, messageIndex, annotations }: Props) {
   const messageRef = React.useRef<HTMLParagraphElement>(null);
 
   React.useEffect(() => {
@@ -28,48 +20,30 @@ export function MessageBubble({ message, isFirst, messageIndex, annotations, pen
     const text = messageRef.current.innerText;
     messageRef.current.innerHTML = text;
 
-    // Combine existing annotations and pending selections
-    const allHighlights = [
-      ...annotations.filter(a => a.messageIndex === messageIndex).map(a => ({
-        startOffset: a.startOffset,
-        endOffset: a.endOffset,
-        type: a.type,
-        comment: a.comment,
-        isPending: false
-      })),
-      ...pendingSelections.filter(s => s.messageIndex === messageIndex).map(s => ({
-        startOffset: s.startOffset,
-        endOffset: s.endOffset,
-        type: 'pending' as const,
-        comment: 'Pending annotation...',
-        isPending: true
-      }))
-    ].sort((a, b) => a.startOffset - b.startOffset);
+    // Sort annotations by start offset to ensure proper highlighting order
+    const messageAnnotations = annotations
+      .filter(a => a.messageIndex === messageIndex)
+      .sort((a, b) => a.startOffset - b.startOffset);
 
     let lastIndex = 0;
     let newHtml = '';
 
-    allHighlights.forEach(highlight => {
-      // Add text before the highlight
-      newHtml += text.slice(lastIndex, highlight.startOffset);
+    messageAnnotations.forEach(annotation => {
+      // Add text before the annotation
+      newHtml += text.slice(lastIndex, annotation.startOffset);
 
       // Add the highlighted text
-      const highlightClass = highlight.isPending
-        ? 'bg-yellow-200'
-        : highlight.type === 'violation'
-        ? 'bg-red-200'
-        : 'bg-green-200';
-      
-      const highlightedText = text.slice(highlight.startOffset, highlight.endOffset);
-      newHtml += `<span class="${highlightClass} rounded px-1" title="${highlight.comment}">${highlightedText}</span>`;
+      const highlightClass = annotation.type === 'violation' ? 'bg-red-200' : 'bg-green-200';
+      const highlightedText = text.slice(annotation.startOffset, annotation.endOffset);
+      newHtml += `<span class="${highlightClass} rounded px-1" title="${annotation.comment}">${highlightedText}</span>`;
 
-      lastIndex = highlight.endOffset;
+      lastIndex = annotation.endOffset;
     });
 
     // Add any remaining text
     newHtml += text.slice(lastIndex);
     messageRef.current.innerHTML = newHtml;
-  }, [messageIndex, annotations, pendingSelections]);
+  }, [messageIndex, annotations]);
 
   return (
     <div className={clsx(

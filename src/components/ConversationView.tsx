@@ -11,20 +11,13 @@ interface Props {
   onAnnotationCreate: (annotation: Selection) => void;
 }
 
-interface PendingSelection {
-  messageIndex: number;
-  startOffset: number;
-  endOffset: number;
-  text: string;
-}
-
 export function ConversationView({ conversation, onAnnotationCreate }: Props) {
-  const [pendingSelections, setPendingSelections] = useState<PendingSelection[]>([]);
+  const [selectedText, setSelectedText] = useState('');
+  const [selection, setSelection] = useState<Omit<Selection, 'ruleId' | 'type' | 'comment'> | null>(null);
   const [rules, setRules] = useState<Rule[]>([]);
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showSidebar, setShowSidebar] = useState(false);
 
   useEffect(() => {
     loadRules();
@@ -63,55 +56,37 @@ export function ConversationView({ conversation, onAnnotationCreate }: Props) {
     const text = windowSelection.toString().trim();
     
     if (text) {
-      const newSelection: PendingSelection = {
+      setSelectedText(text);
+      setSelection({
         messageIndex,
         startOffset: range.startOffset,
-        endOffset: range.endOffset,
-        text
-      };
-
-      setPendingSelections(prev => [...prev, newSelection]);
-      setShowSidebar(true);
-      windowSelection.removeAllRanges(); // Clear the selection after adding
+        endOffset: range.endOffset
+      });
     }
   };
 
-  const handleAnnotationCreate = async ({ ruleId, type, comment }: {
+  const handleAnnotationCreate = async ({ ruleId, type, violationType, comment, replacementSuggestion }: {
     ruleId: string;
     type: 'violation' | 'compliance';
+    violationType?: 'text' | 'missing';
     comment: string;
+    replacementSuggestion?: string;
   }) => {
-    if (pendingSelections.length === 0) return;
+    if (!selection) return;
 
-    try {
-      await annotationsApi.create({
-        conversation_id: conversation.id,
-        selections: pendingSelections.map(selection => ({
-          messageIndex: selection.messageIndex,
-          startOffset: selection.startOffset,
-          endOffset: selection.endOffset,
-          ruleId,
-          type,
-          comment
-        })),
-        annotator: 'current-user', // TODO: Replace with actual user ID when auth is implemented
-      });
+    const newAnnotation: Selection = {
+      ...selection,
+      ruleId,
+      type,
+      violationType,
+      comment,
+      replacementSuggestion
+    };
 
-      await loadAnnotations(); // Reload annotations to show the new ones
-      setPendingSelections([]); // Clear pending selections
-      setShowSidebar(false);
-      setError(null);
-    } catch (err) {
-      setError('Failed to save annotations. Please try again.');
-      console.error('Error saving annotations:', err);
-    }
-  };
-
-  const handleRemoveSelection = (index: number) => {
-    setPendingSelections(prev => prev.filter((_, i) => i !== index));
-    if (pendingSelections.length <= 1) {
-      setShowSidebar(false);
-    }
+    await onAnnotationCreate(newAnnotation);
+    await loadAnnotations(); // Reload annotations to show the new one
+    setSelectedText('');
+    setSelection(null);
   };
 
   if (isLoading) {
@@ -121,9 +96,6 @@ export function ConversationView({ conversation, onAnnotationCreate }: Props) {
       </div>
     );
   }
-
-  // Flatten all selections from all annotations for easier access
-  const allSelections = annotations.flatMap(a => a.selections);
 
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-lg">
@@ -178,23 +150,22 @@ export function ConversationView({ conversation, onAnnotationCreate }: Props) {
               message={message}
               isFirst={index === 0}
               messageIndex={index}
-              annotations={allSelections}
-              pendingSelections={pendingSelections}
+              annotations={annotations.map(a => a.selection)}
             />
           </div>
         ))}
       </div>
 
-      {showSidebar && (
+      {selectedText && selection && (
         <AnnotationSidebar
-          selections={pendingSelections}
+          selectedText={selectedText}
+          messageIndex={selection.messageIndex}
           rules={rules.filter(rule => rule.domain === conversation.domain)}
           onClose={() => {
-            setPendingSelections([]);
-            setShowSidebar(false);
+            setSelectedText('');
+            setSelection(null);
           }}
           onAnnotate={handleAnnotationCreate}
-          onRemoveSelection={handleRemoveSelection}
         />
       )}
     </div>
