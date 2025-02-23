@@ -41,11 +41,11 @@ function App() {
   const [view, setView] = useState<'conversation' | 'rules'>('conversation');
   const [error, setError] = useState<string | null>(null);
 
-  const handleAnnotationCreate = async (annotation: Selection) => {
+  const handleAnnotationCreate = async (selection: Selection) => {
     try {
       await annotationsApi.create({
         conversation_id: exampleConversation._id.$oid,
-        selections: [annotation],
+        selection: selection,
         annotator: 'current-user', // TODO: Replace with actual user ID when auth is implemented
       });
       setError(null);
