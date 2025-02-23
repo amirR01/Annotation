@@ -19,9 +19,16 @@ interface Props {
 export function AnnotationSidebar({ selectedText, messageIndex, rules, onClose, onAnnotate }: Props) {
   const [selectedRule, setSelectedRule] = React.useState<string>('');
   const [type, setType] = React.useState<'violation' | 'compliance'>('violation');
-  const [violationType, setViolationType] = React.useState<ViolationType>('text');
+  const [violationType, setViolationType] = React.useState<ViolationType>(selectedText ? 'text' : 'missing');
   const [comment, setComment] = React.useState('');
   const [replacementSuggestion, setReplacementSuggestion] = React.useState(selectedText);
+
+  // Update violation type when selectedText changes
+  React.useEffect(() => {
+    if (!selectedText && violationType === 'text') {
+      setViolationType('missing');
+    }
+  }, [selectedText, violationType]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,13 +39,13 @@ export function AnnotationSidebar({ selectedText, messageIndex, rules, onClose, 
       type,
       ...(type === 'violation' && { violationType }),
       comment,
-      ...(type === 'violation' && violationType === 'text' && { replacementSuggestion })
+      ...(type === 'violation' && { replacementSuggestion })
     });
 
     // Reset form
     setSelectedRule('');
     setType('violation');
-    setViolationType('text');
+    setViolationType(selectedText ? 'text' : 'missing');
     setComment('');
     setReplacementSuggestion('');
   };
@@ -60,10 +67,10 @@ export function AnnotationSidebar({ selectedText, messageIndex, rules, onClose, 
       <form onSubmit={handleSubmit} className="p-4 space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Selected Text (Message {messageIndex + 1})
+            {selectedText ? 'Selected Text' : 'Insertion Point'} (Message {messageIndex + 1})
           </label>
           <div className="p-3 bg-gray-50 rounded-md text-sm text-gray-600">
-            {selectedText || 'No text selected (Missing text annotation)'}
+            {selectedText || '(Click location for missing text)'}
           </div>
         </div>
 
@@ -142,6 +149,7 @@ export function AnnotationSidebar({ selectedText, messageIndex, rules, onClose, 
                   checked={violationType === 'text'}
                   onChange={(e) => setViolationType(e.target.value as ViolationType)}
                   className="text-red-500 focus:ring-red-500"
+                  disabled={!selectedText}
                 />
                 <span className="ml-2 flex items-center text-sm text-gray-700">
                   <AlertTriangle size={16} className="text-red-500 mr-1" />
@@ -180,17 +188,17 @@ export function AnnotationSidebar({ selectedText, messageIndex, rules, onClose, 
           />
         </div>
 
-        {type === 'violation' && violationType === 'text' && (
+        {type === 'violation' && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Replacement Suggestion
+              {violationType === 'text' ? 'Replacement Suggestion' : 'Missing Text Content'}
             </label>
             <textarea
               value={replacementSuggestion}
               onChange={(e) => setReplacementSuggestion(e.target.value)}
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
               rows={3}
-              placeholder="Suggest a replacement text..."
+              placeholder={violationType === 'text' ? "Suggest a replacement text..." : "Enter the missing text that should be here..."}
               required
             />
           </div>

@@ -50,18 +50,30 @@ export function ConversationView({ conversation, onAnnotationCreate }: Props) {
 
   const handleMouseUp = (messageIndex: number) => {
     const windowSelection = window.getSelection();
-    if (!windowSelection || windowSelection.isCollapsed) return;
+    if (!windowSelection) return;
 
-    const range = windowSelection.getRangeAt(0);
-    const text = windowSelection.toString().trim();
-    
-    if (text) {
-      setSelectedText(text);
+    if (windowSelection.isCollapsed) {
+      // Handle click (no text selection)
+      const range = windowSelection.getRangeAt(0);
+      setSelectedText('');
       setSelection({
         messageIndex,
         startOffset: range.startOffset,
-        endOffset: range.endOffset
+        endOffset: range.startOffset
       });
+    } else {
+      // Handle text selection
+      const range = windowSelection.getRangeAt(0);
+      const text = windowSelection.toString().trim();
+      
+      if (text) {
+        setSelectedText(text);
+        setSelection({
+          messageIndex,
+          startOffset: range.startOffset,
+          endOffset: range.endOffset
+        });
+      }
     }
   };
 
@@ -156,7 +168,7 @@ export function ConversationView({ conversation, onAnnotationCreate }: Props) {
         ))}
       </div>
 
-      {selectedText && selection && (
+      {selection && (
         <AnnotationSidebar
           selectedText={selectedText}
           messageIndex={selection.messageIndex}
