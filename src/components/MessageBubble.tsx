@@ -15,35 +15,37 @@ export function MessageBubble({ message, isFirst, messageIndex, annotations }: P
 
   React.useEffect(() => {
     if (!messageRef.current) return;
-
-    // Clear existing highlights
-    const text = messageRef.current.innerText;
-    messageRef.current.innerHTML = text;
-
-    // Sort annotations by start offset to ensure proper highlighting order
+  
+    const text = message.message;
+    let newHtml = '';
+    let lastIndex = 0;
+  
+    // Sort annotations by startOffset
     const messageAnnotations = annotations
       .filter(a => a.messageIndex === messageIndex)
       .sort((a, b) => a.startOffset - b.startOffset);
-
-    let lastIndex = 0;
-    let newHtml = '';
-
+  
     messageAnnotations.forEach(annotation => {
-      // Add text before the annotation
       newHtml += text.slice(lastIndex, annotation.startOffset);
-
-      // Add the highlighted text
-      const highlightClass = annotation.type === 'violation' ? 'bg-red-200' : 'bg-green-200';
-      const highlightedText = text.slice(annotation.startOffset, annotation.endOffset);
-      newHtml += `<span class="${highlightClass} rounded px-1" title="${annotation.comment}">${highlightedText}</span>`;
-
+  
+      if (annotation.type === 'violation' && annotation.violationType === 'text') {
+        // Highlight existing text violations in red
+        const highlightClass = 'bg-red-200';
+        const highlightedText = text.slice(annotation.startOffset, annotation.endOffset);
+        newHtml += `<span class="${highlightClass} text-black rounded px-1" title="${annotation.comment}">${highlightedText}</span>`;
+  
+      } else if (annotation.type === 'violation' && annotation.violationType === 'missing' && annotation.replacementSuggestion) {
+        // Insert missing text inline without extra spacing and use orange for visibility
+        newHtml += `<span class="bg-orange-100 text-black px-1 rounded" title="Missing text: ${annotation.comment}">{${annotation.replacementSuggestion}}</span>`;
+      }
+  
       lastIndex = annotation.endOffset;
     });
-
-    // Add any remaining text
+  
     newHtml += text.slice(lastIndex);
     messageRef.current.innerHTML = newHtml;
   }, [messageIndex, annotations]);
+  
 
   return (
     <div className={clsx(
