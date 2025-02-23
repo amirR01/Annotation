@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 from .base import PyObjectId
 
 class RuleBase(BaseModel):
-    domain_id: str = Field(...)
+    domain: str = Field(...)
     name: str = Field(...)
     description: str = Field(...)
     category: str = Field(...)
@@ -12,7 +12,7 @@ class RuleCreate(RuleBase):
     pass
 
 class RuleUpdate(BaseModel):
-    domain_id: Optional[str] = None
+    domain: Optional[str] = None
     name: Optional[str] = None
     description: Optional[str] = None
     category: Optional[str] = None
@@ -25,7 +25,7 @@ class RuleInDB(RuleBase):
         json_schema_extra = {
             "example": {
                 "_id": "507f1f77bcf86cd799439011",
-                "domain_id": "ethics",
+                "domain": "ethics",
                 "name": "Respectful Communication",
                 "description": "Communication should be respectful and avoid harmful language.",
                 "category": "Communication"
